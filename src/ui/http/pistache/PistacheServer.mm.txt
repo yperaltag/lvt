@@ -1,0 +1,106 @@
+#include "PistacheServer.h"
+
+#include "utilities/StringUtils.h"
+
+#include <iostream>
+#include <sstream>
+
+namespace lvt {
+namespace ui {
+namespace http {
+namespace pistache {
+
+static std::string getId(const std::string &json) {
+    std::string id;
+    std::stringstream stream(json);
+    
+    for (int i = 0; i < 4; i ++) {
+        stream >> id;
+    }
+    
+    return id.substr(1, id.size() - 2);
+}
+
+PistacheServer::PistacheServer(std::shared_ptr<lvt::UiListener> listener, std::uint16_t port)
+: lvt::ui::http::HttpServer(listener, port) {
+    
+}
+
+void PistacheServer::run() {
+    auto method = lvt::ui::http::Method::Post;
+    
+    auto path = lvt::utilities::StringUtils::split("v1/vehicles", '/');
+    
+    std::vector<lvt::ui::http::UrlParameter> urlParameters = {
+        lvt::ui::http::UrlParameter{"latitude", "34.5"},
+        lvt::ui::http::UrlParameter{"longitude", "1.789"},
+    };
+    
+    processRequest(method, path, urlParameters, [this] (lvt::UiStatusCode statusCode, const std::string &json) {
+        std::cout << "status code: " << static_cast<int>(statusCode) << std::endl;
+        std::cout << "json:\n" << json << std::endl;
+        
+        auto id = getId(json);
+        std::cout << "id: " << id << std::endl;
+        
+        /////////////////////////////////
+        
+        auto method = lvt::ui::http::Method::Get;
+        
+        auto path = lvt::utilities::StringUtils::split("v1/vehicles/" + id, '/');
+        
+        std::vector<lvt::ui::http::UrlParameter> urlParameters = {};
+        
+        processRequest(method, path, urlParameters, [] (lvt::UiStatusCode statusCode, const std::string &json) {
+            std::cout << "status code: " << static_cast<int>(statusCode) << std::endl;
+            std::cout << "json:\n" << json << std::endl;
+        });
+        
+        //////////////////////////
+        
+        method = lvt::ui::http::Method::Put;
+        
+        path = lvt::utilities::StringUtils::split("v1/vehicles/" + id, '/');
+        
+        urlParameters = {
+            lvt::ui::http::UrlParameter{"latitude", "1234.56"},
+            lvt::ui::http::UrlParameter{"longitude", "0.9876"},
+        };
+        
+        processRequest(method, path, urlParameters, [] (lvt::UiStatusCode statusCode, const std::string &json) {
+            std::cout << "status code: " << static_cast<int>(statusCode) << std::endl;
+            std::cout << "json:\n" << json << std::endl;
+        });
+        
+        /////////////////////////////////
+        
+        method = lvt::ui::http::Method::Get;
+        
+        path = lvt::utilities::StringUtils::split("v1/vehicles/" + id, '/');
+        
+        urlParameters = {};
+        
+        processRequest(method, path, urlParameters, [] (lvt::UiStatusCode statusCode, const std::string &json) {
+            std::cout << "status code: " << static_cast<int>(statusCode) << std::endl;
+            std::cout << "json:\n" << json << std::endl;
+        });
+        
+        //////////////////////////
+        
+        method = lvt::ui::http::Method::Delete;
+        
+        path = lvt::utilities::StringUtils::split("v1/vehicles/" + id, '/');
+        
+        urlParameters = {};
+        
+        processRequest(method, path, urlParameters, [] (lvt::UiStatusCode statusCode, const std::string &json) {
+            std::cout << "status code: " << static_cast<int>(statusCode) << std::endl;
+            std::cout << "json:\n" << json << std::endl;
+        });
+    });
+}
+
+} // namespace pistache
+} // namespace http
+} // namespace ui
+} // namespace lvt
